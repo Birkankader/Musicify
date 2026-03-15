@@ -156,7 +156,55 @@ export class SpotifyClient {
     );
   }
 
+  /**
+   * Workaround: fetch the playlist object itself — it embeds the first page of tracks.
+   * Then paginate from there using the tracks.next URL.
+   * This may bypass the /tracks endpoint restriction in Development Mode.
+   */
+  async getPlaylistWithTracks(playlistId: string): Promise<SpotifyTrack[]> {
+    const playlist = await this.fetch<{
+      tracks: SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>;
+    }>(`/playlists/${playlistId}`, { market: 'from_token' });
+
+    const tracks: SpotifyTrack[] = [];
+
+    // Process first page (embedded in playlist object)
+    for (const item of playlist.tracks.items) {
+      if (!item.is_local && item.track) {
+        tracks.push(item.track);
+      }
+    }
+
+    // Paginate remaining if any
+    let nextUrl = playlist.tracks.next;
+    while (nextUrl) {
+      // next URL is absolute — extract path + query
+      const url = new URL(nextUrl);
+      const pathAndQuery = url.pathname.replace('/v1', '') + url.search;
+      const page = await this.fetch<SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>>(pathAndQuery);
+      for (const item of page.items) {
+        if (!item.is_local && item.track) {
+          tracks.push(item.track);
+        }
+      }
+      nextUrl = page.next;
+    }
+
+    return tracks;
+  }
+
   async getAllPlaylistTracks(playlistId: string): Promise<SpotifyTrack[]> {
+    // Try workaround first (fetch playlist object with embedded tracks)
+    try {
+      return await this.getPlaylistWithTracks(playlistId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      // If the workaround also 403s, throw — no way around it
+      if (msg.includes('403')) throw err;
+      console.warn('[SpotifyClient] Playlist workaround failed, trying /tracks:', msg);
+    }
+
+    // Fallback: direct /tracks endpoint
     const tracks: SpotifyTrack[] = [];
     let offset = 0;
     const limit = 50;
