@@ -40,7 +40,7 @@
 
 ## Tasks
 
-- [ ] **T01: Apple Music catalog search API route and matching engine** `est:45m`
+- [x] **T01: Apple Music catalog search API route and matching engine** `est:45m`
   - Why: Core matching logic — everything downstream depends on being able to search Apple Music and match tracks
   - Files: `src/lib/matching.ts`, `src/app/api/apple-music/search/route.ts`
   - Do:
@@ -54,7 +54,7 @@
   - Verify: Import and call `matchTracks` with a small test array, confirm it returns typed MatchResult[]
   - Done when: `matchTracks()` correctly returns ISRC, metadata, and unmatched results for a real playlist
 
-- [ ] **T02: Spotify playlist fetching API route and playlist grid UI** `est:40m`
+- [x] **T02: Spotify playlist fetching API route and playlist grid UI** `est:40m`
   - Why: User needs to see and select their playlists before matching can happen
   - Files: `src/app/api/spotify/playlists/route.ts`, `src/components/PlaylistGrid.tsx`, `src/components/HomePage.tsx`
   - Do:
@@ -68,7 +68,7 @@
   - Verify: Dev server → connect both platforms → playlist grid appears with real Spotify playlists
   - Done when: User sees all their Spotify playlists in a grid and can click to select one
 
-- [ ] **T03: Match results view and playlist-level matching flow** `est:40m`
+- [x] **T03: Match results view and playlist-level matching flow** `est:40m`
   - Why: Wires everything together — selecting a playlist triggers matching and shows results
   - Files: `src/components/MatchResults.tsx`, `src/components/PlaylistGrid.tsx`, `src/components/HomePage.tsx`
   - Do:
