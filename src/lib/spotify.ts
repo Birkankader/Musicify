@@ -151,6 +151,7 @@ export class SpotifyClient {
       {
         limit: String(limit),
         offset: String(offset),
+        market: 'from_token',
       }
     );
   }

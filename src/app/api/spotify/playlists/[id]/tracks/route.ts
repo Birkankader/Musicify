@@ -1,8 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SpotifyClient, decodeTokenCookie } from '@/lib/spotify';
+import { SpotifyClient, decodeTokenCookie, refreshSpotifyToken, encodeTokenCookie } from '@/lib/spotify';
 
 export const dynamic = 'force-dynamic';
+
+async function getValidClient(): Promise<{ client: SpotifyClient; response?: NextResponse }> {
+  const cookieStore = await cookies();
+  const tokenCookie = cookieStore.get('spotify_tokens')?.value;
+
+  if (!tokenCookie) throw new Error('Not authenticated with Spotify');
+
+  const tokens = decodeTokenCookie(tokenCookie);
+  if (!tokens) throw new Error('Invalid token cookie');
+
+  let accessToken = tokens.access_token;
+  let refreshedResponse: NextResponse | undefined;
+
+  // Refresh if expired (60s buffer)
+  if (Date.now() > tokens.expires_at - 60_000) {
+    const refreshed = await refreshSpotifyToken(tokens.refresh_token);
+    accessToken = refreshed.access_token;
+    const newExpiresAt = Date.now() + refreshed.expires_in * 1000;
+
+    refreshedResponse = NextResponse.json({});
+    refreshedResponse.cookies.set('spotify_tokens', encodeTokenCookie({
+      access_token: accessToken,
+      refresh_token: tokens.refresh_token,
+      expires_at: newExpiresAt,
+    }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+
+  return { client: new SpotifyClient(accessToken), response: refreshedResponse };
+}
 
 export async function GET(
   request: NextRequest,
@@ -10,20 +45,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-
-    const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get('spotify_tokens')?.value;
-
-    if (!tokenCookie) {
-      return NextResponse.json({ error: 'Not authenticated with Spotify' }, { status: 401 });
-    }
-
-    const tokens = decodeTokenCookie(tokenCookie);
-    if (!tokens) {
-      return NextResponse.json({ error: 'Invalid token cookie' }, { status: 401 });
-    }
-
-    const client = new SpotifyClient(tokens.access_token);
+    const { client } = await getValidClient();
 
     // Special case: liked songs
     if (id === '__liked__') {
@@ -35,7 +57,12 @@ export async function GET(
     return NextResponse.json({ tracks });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`[spotify/playlists/${(await params).id}/tracks]`, message);
+    const { id } = await params;
+    console.error(`[spotify/playlists/${id}/tracks]`, message);
+
+    if (message.includes('Not authenticated') || message.includes('Invalid token')) {
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

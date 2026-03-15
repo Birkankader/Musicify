@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SpotifyClient, decodeTokenCookie } from '@/lib/spotify';
+import { SpotifyClient, decodeTokenCookie, refreshSpotifyToken, encodeTokenCookie } from '@/lib/spotify';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Invalid token cookie' }, { status: 401 });
     }
 
-    const client = new SpotifyClient(tokens.access_token);
+    let accessToken = tokens.access_token;
+
+    // Refresh if expired (60s buffer)
+    if (Date.now() > tokens.expires_at - 60_000) {
+      try {
+        const refreshed = await refreshSpotifyToken(tokens.refresh_token);
+        accessToken = refreshed.access_token;
+      } catch (err) {
+        console.error('[spotify/playlists] Token refresh failed:', err);
+        return NextResponse.json({ error: 'Session expired — please reconnect Spotify' }, { status: 401 });
+      }
+    }
+
+    const client = new SpotifyClient(accessToken);
     const playlists = await client.getAllPlaylists();
 
     // Also fetch liked songs count
