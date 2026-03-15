@@ -82,10 +82,6 @@ export function PlaylistGrid({ onSelectPlaylist, onSelectLikedSongs, selectedPla
 
   if (!data) return null;
 
-  // Separate own playlists from followed ones
-  const ownPlaylists = data.playlists.filter((p) => p.owner?.id === data.userId);
-  const followedPlaylists = data.playlists.filter((p) => p.owner?.id !== data.userId);
-
   return (
     <div className="fade-in">
       <div className="flex items-center justify-between mb-6">
@@ -93,7 +89,7 @@ export function PlaylistGrid({ onSelectPlaylist, onSelectLikedSongs, selectedPla
           Your Playlists
         </h2>
         <span className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-          {ownPlaylists.length} own · {followedPlaylists.length} followed
+          {data.playlists.length} playlists
         </span>
       </div>
 
@@ -118,100 +114,47 @@ export function PlaylistGrid({ onSelectPlaylist, onSelectLikedSongs, selectedPla
           </div>
         </button>
 
-        {/* Own playlists */}
-        {ownPlaylists.map((playlist) => (
-          <PlaylistCard
+        {/* All playlists */}
+        {data.playlists.map((playlist) => (
+          <button
             key={playlist.id}
-            playlist={playlist}
-            isOwn={true}
-            isSelected={selectedPlaylistId === playlist.id}
-            onSelect={() => onSelectPlaylist(playlist)}
-          />
+            onClick={() => onSelectPlaylist(playlist)}
+            className="playlist-card text-left"
+            data-selected={selectedPlaylistId === playlist.id || undefined}
+          >
+            <div className="aspect-square rounded-lg mb-3 overflow-hidden relative" style={{ background: 'var(--border-subtle)' }}>
+              {playlist.images?.[0] ? (
+                <img
+                  src={playlist.images[0].url}
+                  alt={playlist.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
+                    <path d="M9 18V5l12-2v13" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="16" r="3" />
+                  </svg>
+                </div>
+              )}
+              {playlist.owner?.id !== data.userId && (
+                <div
+                  className="absolute bottom-1.5 right-1.5 text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(0,0,0,0.7)', color: 'var(--text-muted)' }}
+                >
+                  {playlist.owner?.display_name}
+                </div>
+              )}
+            </div>
+            <div className="font-medium text-sm truncate">{playlist.name}</div>
+            <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
+              {playlist.tracks?.total ?? 0} songs
+            </div>
+          </button>
         ))}
       </div>
-
-      {/* Followed playlists (shown but marked as restricted) */}
-      {followedPlaylists.length > 0 && (
-        <>
-          <div className="flex items-center gap-3 mt-8 mb-4">
-            <h3 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-              Followed Playlists
-            </h3>
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(250, 204, 21, 0.12)', color: '#facc15', fontFamily: 'var(--font-mono)' }}
-            >
-              limited access
-            </span>
-          </div>
-          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-            Spotify API restricts track access for playlists you don&apos;t own. These may not be transferable.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {followedPlaylists.map((playlist) => (
-              <PlaylistCard
-                key={playlist.id}
-                playlist={playlist}
-                isOwn={false}
-                isSelected={selectedPlaylistId === playlist.id}
-                onSelect={() => onSelectPlaylist(playlist)}
-              />
-            ))}
-          </div>
-        </>
-      )}
     </div>
-  );
-}
-
-function PlaylistCard({
-  playlist,
-  isOwn,
-  isSelected,
-  onSelect,
-}: {
-  playlist: SpotifyPlaylist;
-  isOwn: boolean;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className="playlist-card text-left"
-      data-selected={isSelected || undefined}
-      style={{ opacity: isOwn ? 1 : 0.6 }}
-    >
-      <div className="aspect-square rounded-lg mb-3 overflow-hidden relative" style={{ background: 'var(--border-subtle)' }}>
-        {playlist.images?.[0] ? (
-          <img
-            src={playlist.images[0].url}
-            alt={playlist.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
-              <path d="M9 18V5l12-2v13" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="6" cy="18" r="3" />
-              <circle cx="18" cy="16" r="3" />
-            </svg>
-          </div>
-        )}
-        {!isOwn && (
-          <div
-            className="absolute bottom-1.5 right-1.5 text-[10px] px-1.5 py-0.5 rounded"
-            style={{ background: 'rgba(0,0,0,0.7)', color: 'var(--text-muted)' }}
-          >
-            followed
-          </div>
-        )}
-      </div>
-      <div className="font-medium text-sm truncate">{playlist.name}</div>
-      <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
-        {playlist.tracks?.total ?? 0} songs · {playlist.owner?.display_name ?? ''}
-      </div>
-    </button>
   );
 }
