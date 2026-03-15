@@ -18,7 +18,7 @@ const SCOPES = [
 
 export function getSpotifyAuthUrl(): string {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/auth/spotify/callback';
+  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3000/api/auth/spotify/callback';
 
   if (!clientId) {
     throw new Error('SPOTIFY_CLIENT_ID is not set');
@@ -42,7 +42,7 @@ export async function exchangeSpotifyCode(code: string): Promise<{
 }> {
   const clientId = process.env.SPOTIFY_CLIENT_ID!;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/auth/spotify/callback';
+  const redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3000/api/auth/spotify/callback';
 
   const response = await fetch(SPOTIFY_TOKEN_URL, {
     method: 'POST',
