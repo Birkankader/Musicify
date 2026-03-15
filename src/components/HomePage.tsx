@@ -3,25 +3,32 @@
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { AuthStatus } from '@/components/AuthStatus';
 import { PlaylistGrid } from '@/components/PlaylistGrid';
+import { MatchResults } from '@/components/MatchResults';
 import { useState, useEffect, useCallback } from 'react';
 import type { SpotifyPlaylist } from '@/types';
 
 function HomeContent() {
   const { bothConnected } = useAuth();
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
-  const [, setSelectedPlaylist] = useState<SpotifyPlaylist | null>(null);
+  const [selectedPlaylistName, setSelectedPlaylistName] = useState<string>('');
 
   const handleSelectPlaylist = useCallback((playlist: SpotifyPlaylist) => {
     setSelectedPlaylistId(playlist.id);
-    setSelectedPlaylist(playlist);
-    // T03 will wire this to matching
+    setSelectedPlaylistName(playlist.name);
   }, []);
 
   const handleSelectLikedSongs = useCallback(() => {
     setSelectedPlaylistId('__liked__');
-    setSelectedPlaylist(null);
-    // T03 will wire this to liked songs matching
+    setSelectedPlaylistName('Liked Songs');
   }, []);
+
+  const handleBack = useCallback(() => {
+    setSelectedPlaylistId(null);
+    setSelectedPlaylistName('');
+  }, []);
+
+  // Show match results when a playlist is selected
+  const showMatchResults = bothConnected && selectedPlaylistId;
 
   return (
     <div className="relative z-10 min-h-screen flex flex-col">
@@ -50,27 +57,31 @@ function HomeContent() {
       <main className="flex-1 px-8 pb-16">
         <div className="max-w-5xl mx-auto">
           {/* Hero — compact when both connected */}
-          <div className={`text-center fade-in fade-in-delay-1 ${bothConnected ? 'mb-8' : 'mb-16 mt-[12vh]'}`}>
-            <h1
-              className={`font-bold tracking-tight mb-4 ${bothConnected ? 'text-3xl' : 'text-5xl'}`}
-              style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}
-            >
-              {bothConnected ? 'Select playlists to transfer' : 'Move your music.'}
-            </h1>
-            {!bothConnected && (
-              <p className="text-lg" style={{ color: 'var(--text-secondary)', maxWidth: '480px', margin: '0 auto' }}>
-                Transfer playlists and liked songs from Spotify to Apple Music. Fast, accurate, and satisfying to watch.
-              </p>
-            )}
-          </div>
+          {!showMatchResults && (
+            <div className={`text-center fade-in fade-in-delay-1 ${bothConnected ? 'mb-8' : 'mb-16 mt-[12vh]'}`}>
+              <h1
+                className={`font-bold tracking-tight mb-4 ${bothConnected ? 'text-3xl' : 'text-5xl'}`}
+                style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}
+              >
+                {bothConnected ? 'Select a playlist to match' : 'Move your music.'}
+              </h1>
+              {!bothConnected && (
+                <p className="text-lg" style={{ color: 'var(--text-secondary)', maxWidth: '480px', margin: '0 auto' }}>
+                  Transfer playlists and liked songs from Spotify to Apple Music. Fast, accurate, and satisfying to watch.
+                </p>
+              )}
+            </div>
+          )}
 
-          {/* Auth Status */}
-          <div className={`fade-in fade-in-delay-2 ${bothConnected ? 'mb-10' : ''}`}>
-            <AuthStatus />
-          </div>
+          {/* Auth Status — hidden during matching */}
+          {!showMatchResults && (
+            <div className={`fade-in fade-in-delay-2 ${bothConnected ? 'mb-10' : ''}`}>
+              <AuthStatus />
+            </div>
+          )}
 
-          {/* Playlist Grid — shows when both connected */}
-          {bothConnected && (
+          {/* Playlist Grid — shows when both connected and no playlist selected */}
+          {bothConnected && !selectedPlaylistId && (
             <div className="fade-in fade-in-delay-3 mt-4">
               <PlaylistGrid
                 onSelectPlaylist={handleSelectPlaylist}
@@ -78,6 +89,15 @@ function HomeContent() {
                 selectedPlaylistId={selectedPlaylistId}
               />
             </div>
+          )}
+
+          {/* Match Results — shows when a playlist is selected */}
+          {showMatchResults && (
+            <MatchResults
+              playlistId={selectedPlaylistId}
+              playlistName={selectedPlaylistName}
+              onBack={handleBack}
+            />
           )}
         </div>
       </main>
