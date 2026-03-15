@@ -52,7 +52,7 @@ This milestone is complete only when all are true:
 - [x] **S01: Dual Platform Authentication** `risk:high` `depends:[]`
   > After this: User can sign in with Spotify and authorize Apple Music — both connections shown as active on the UI
 
-- [ ] **S02: Playlist Discovery & Song Matching** `risk:high` `depends:[S01]`
+- [x] **S02: Playlist Discovery & Song Matching** `risk:high` `depends:[S01]`
   > After this: User sees all their Spotify playlists, selects one, and sees match results — how many songs found on Apple Music via ISRC + fallback
 
 - [ ] **S03: Playlist Transfer & Migration Animation** `risk:medium` `depends:[S02]`

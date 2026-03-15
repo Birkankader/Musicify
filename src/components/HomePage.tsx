@@ -4,31 +4,60 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { AuthStatus } from '@/components/AuthStatus';
 import { PlaylistGrid } from '@/components/PlaylistGrid';
 import { MatchResults } from '@/components/MatchResults';
+import { TransferView } from '@/components/TransferView';
 import { useState, useEffect, useCallback } from 'react';
-import type { SpotifyPlaylist } from '@/types';
+import type { SpotifyPlaylist, MatchResult, TransferResult } from '@/types';
+
+type AppPhase = 'browse' | 'matching' | 'transfer' | 'complete';
 
 function HomeContent() {
   const { bothConnected } = useAuth();
+  const [phase, setPhase] = useState<AppPhase>('browse');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
-  const [selectedPlaylistName, setSelectedPlaylistName] = useState<string>('');
+  const [selectedPlaylistName, setSelectedPlaylistName] = useState('');
+  const [matchResults, setMatchResults] = useState<MatchResult[]>([]);
+  const [transferResult, setTransferResult] = useState<TransferResult | null>(null);
 
   const handleSelectPlaylist = useCallback((playlist: SpotifyPlaylist) => {
     setSelectedPlaylistId(playlist.id);
     setSelectedPlaylistName(playlist.name);
+    setPhase('matching');
   }, []);
 
   const handleSelectLikedSongs = useCallback(() => {
     setSelectedPlaylistId('__liked__');
     setSelectedPlaylistName('Liked Songs');
+    setPhase('matching');
   }, []);
 
   const handleBack = useCallback(() => {
     setSelectedPlaylistId(null);
     setSelectedPlaylistName('');
+    setMatchResults([]);
+    setPhase('browse');
   }, []);
 
-  // Show match results when a playlist is selected
-  const showMatchResults = bothConnected && selectedPlaylistId;
+  const handleTransfer = useCallback((results: MatchResult[]) => {
+    setMatchResults(results);
+    setPhase('transfer');
+  }, []);
+
+  const handleTransferBack = useCallback(() => {
+    setPhase('matching');
+  }, []);
+
+  const handleTransferComplete = useCallback((result: TransferResult) => {
+    setTransferResult(result);
+    setPhase('complete');
+  }, []);
+
+  const handleTransferAnother = useCallback(() => {
+    setSelectedPlaylistId(null);
+    setSelectedPlaylistName('');
+    setMatchResults([]);
+    setTransferResult(null);
+    setPhase('browse');
+  }, []);
 
   return (
     <div className="relative z-10 min-h-screen flex flex-col">
@@ -56,14 +85,14 @@ function HomeContent() {
       {/* Main */}
       <main className="flex-1 px-8 pb-16">
         <div className="max-w-5xl mx-auto">
-          {/* Hero — compact when both connected */}
-          {!showMatchResults && (
+          {/* Hero — only in browse phase */}
+          {phase === 'browse' && (
             <div className={`text-center fade-in fade-in-delay-1 ${bothConnected ? 'mb-8' : 'mb-16 mt-[12vh]'}`}>
               <h1
                 className={`font-bold tracking-tight mb-4 ${bothConnected ? 'text-3xl' : 'text-5xl'}`}
                 style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1 }}
               >
-                {bothConnected ? 'Select a playlist to match' : 'Move your music.'}
+                {bothConnected ? 'Select a playlist to transfer' : 'Move your music.'}
               </h1>
               {!bothConnected && (
                 <p className="text-lg" style={{ color: 'var(--text-secondary)', maxWidth: '480px', margin: '0 auto' }}>
@@ -73,15 +102,15 @@ function HomeContent() {
             </div>
           )}
 
-          {/* Auth Status — hidden during matching */}
-          {!showMatchResults && (
+          {/* Auth Status — only in browse phase */}
+          {phase === 'browse' && (
             <div className={`fade-in fade-in-delay-2 ${bothConnected ? 'mb-10' : ''}`}>
               <AuthStatus />
             </div>
           )}
 
-          {/* Playlist Grid — shows when both connected and no playlist selected */}
-          {bothConnected && !selectedPlaylistId && (
+          {/* Browse: Playlist Grid */}
+          {bothConnected && phase === 'browse' && (
             <div className="fade-in fade-in-delay-3 mt-4">
               <PlaylistGrid
                 onSelectPlaylist={handleSelectPlaylist}
@@ -91,12 +120,35 @@ function HomeContent() {
             </div>
           )}
 
-          {/* Match Results — shows when a playlist is selected */}
-          {showMatchResults && (
+          {/* Matching: Match Results */}
+          {phase === 'matching' && selectedPlaylistId && (
             <MatchResults
               playlistId={selectedPlaylistId}
               playlistName={selectedPlaylistName}
               onBack={handleBack}
+              onTransfer={handleTransfer}
+            />
+          )}
+
+          {/* Transfer: TransferView */}
+          {phase === 'transfer' && selectedPlaylistId && (
+            <TransferView
+              playlistId={selectedPlaylistId}
+              playlistName={selectedPlaylistName}
+              matchResults={matchResults}
+              onBack={handleTransferBack}
+              onComplete={handleTransferComplete}
+            />
+          )}
+
+          {/* Complete: Show result in TransferView (it handles done state) */}
+          {phase === 'complete' && selectedPlaylistId && (
+            <TransferView
+              playlistId={selectedPlaylistId}
+              playlistName={selectedPlaylistName}
+              matchResults={matchResults}
+              onBack={handleTransferAnother}
+              onComplete={() => {}}
             />
           )}
         </div>

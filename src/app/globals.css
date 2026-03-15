@@ -317,3 +317,72 @@ body::after {
 .match-progress-bar.active .fill {
   animation: progressPulse 1.5s ease-in-out infinite;
 }
+
+/* Transfer animation */
+.transfer-animation-container {
+  position: relative;
+  padding: 32px 0;
+}
+
+.transfer-platforms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.transfer-platform-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+
+.transfer-platform-icon.spotify-glow {
+  box-shadow: 0 0 30px rgba(29, 185, 84, 0.2);
+  border-color: rgba(29, 185, 84, 0.3);
+}
+
+.transfer-platform-icon.apple-glow {
+  box-shadow: 0 0 30px rgba(252, 60, 68, 0.2);
+  border-color: rgba(252, 60, 68, 0.3);
+}
+
+@keyframes arrowPulse {
+  0%, 100% { opacity: 0.4; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(4px); }
+}
+
+.transfer-arrow-flow {
+  color: var(--text-muted);
+  animation: arrowPulse 1.2s ease-in-out infinite;
+}
+
+.transfer-art-flow {
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+  padding: 8px 0;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+@keyframes artSlide {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.transfer-art-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  animation: artSlide 0.4s ease-out forwards;
+  transition: opacity 0.3s ease;
+}

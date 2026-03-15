@@ -9,11 +9,12 @@ interface MatchResultsProps {
   playlistName: string;
   onBack: () => void;
   onMatchComplete?: (results: MatchResult[]) => void;
+  onTransfer?: (results: MatchResult[]) => void;
 }
 
 type Phase = 'loading-tracks' | 'matching' | 'done' | 'error';
 
-export function MatchResults({ playlistId, playlistName, onBack, onMatchComplete }: MatchResultsProps) {
+export function MatchResults({ playlistId, playlistName, onBack, onMatchComplete, onTransfer }: MatchResultsProps) {
   const [phase, setPhase] = useState<Phase>('loading-tracks');
   const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
   const [results, setResults] = useState<MatchResult[]>([]);
@@ -171,6 +172,18 @@ export function MatchResults({ playlistId, playlistName, onBack, onMatchComplete
             <div className="stat-dot" style={{ background: 'var(--apple-pink)' }} />
             <span style={{ color: 'var(--apple-pink)' }}>{stats.unmatched} unmatched</span>
           </div>
+        </div>
+      )}
+
+      {/* Transfer button */}
+      {stats && phase === 'done' && (stats.isrc + stats.metadata) > 0 && onTransfer && (
+        <div className="mb-6">
+          <button
+            onClick={() => onTransfer(results)}
+            className="btn-apple w-full py-3.5 text-base"
+          >
+            Transfer {stats.isrc + stats.metadata} songs to Apple Music
+          </button>
         </div>
       )}
 
