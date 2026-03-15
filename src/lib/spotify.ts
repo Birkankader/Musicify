@@ -151,7 +151,6 @@ export class SpotifyClient {
       {
         limit: String(limit),
         offset: String(offset),
-        fields: 'items(added_at,track(id,name,artists(id,name),album(id,name,images),duration_ms,external_ids,uri),is_local),total,limit,offset,next,previous',
       }
     );
   }
