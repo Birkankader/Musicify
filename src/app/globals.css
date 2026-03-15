@@ -218,3 +218,102 @@ body::after {
 .arrow-animate {
   animation: slideRight 2s ease-in-out infinite;
 }
+
+/* Playlist cards */
+.playlist-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.playlist-card:hover {
+  border-color: var(--border-glow);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.playlist-card[data-selected] {
+  border-color: var(--spotify-green);
+  box-shadow: 0 0 0 1px var(--spotify-green), 0 4px 24px rgba(29, 185, 84, 0.15);
+  background: var(--bg-card-hover);
+}
+
+/* Match status indicators */
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.match-badge.isrc {
+  background: rgba(29, 185, 84, 0.15);
+  color: var(--spotify-green);
+}
+
+.match-badge.metadata {
+  background: rgba(250, 204, 21, 0.15);
+  color: #facc15;
+}
+
+.match-badge.unmatched {
+  background: rgba(252, 60, 68, 0.12);
+  color: var(--apple-pink);
+}
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.stats-bar .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stats-bar .stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Progress bar */
+@keyframes progressPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.match-progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+
+.match-progress-bar .fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  transition: width 0.3s ease;
+}
+
+.match-progress-bar.active .fill {
+  animation: progressPulse 1.5s ease-in-out infinite;
+}
