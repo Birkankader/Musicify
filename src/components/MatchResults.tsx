@@ -42,7 +42,12 @@ export function MatchResults({ playlistId, playlistName, onBack, onMatchComplete
       const res = await fetch(`/api/spotify/playlists/${playlistId}/tracks`);
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || `Failed to fetch tracks (${res.status})`);
+        const msg = body.error || `Failed to fetch tracks (${res.status})`;
+        // Detect Spotify 403 — API restriction on non-owned playlists
+        if (msg.includes('403') || msg.includes('Forbidden')) {
+          throw new Error('Spotify restricts track access for playlists you don\'t own. Try one of your own playlists or Liked Songs.');
+        }
+        throw new Error(msg);
       }
 
       const { tracks: fetchedTracks } = await res.json();

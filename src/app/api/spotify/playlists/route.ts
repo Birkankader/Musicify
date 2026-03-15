@@ -33,6 +33,7 @@ export async function GET() {
 
     const client = new SpotifyClient(accessToken);
     const playlists = await client.getAllPlaylists();
+    const profile = await client.getProfile();
 
     // Also fetch liked songs count
     const likedPage = await client.getLikedSongs(1, 0);
@@ -40,6 +41,7 @@ export async function GET() {
     return NextResponse.json({
       playlists,
       likedSongsTotal: likedPage.total,
+      userId: profile.id,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
