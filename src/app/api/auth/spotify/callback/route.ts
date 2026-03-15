@@ -7,15 +7,16 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('Spotify auth denied:', error);
-    return NextResponse.redirect(new URL('/?error=spotify_denied', request.url));
+    return NextResponse.redirect('http://127.0.0.1:3000/?error=spotify_denied');
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL('/?error=no_code', request.url));
+    return NextResponse.redirect('http://127.0.0.1:3000/?error=no_code');
   }
 
   try {
     const tokens = await exchangeSpotifyCode(code);
+
     const expiresAt = Date.now() + tokens.expires_in * 1000;
 
     const cookieValue = encodeTokenCookie({
@@ -24,7 +25,9 @@ export async function GET(request: NextRequest) {
       expires_at: expiresAt,
     });
 
-    const response = NextResponse.redirect(new URL('/', request.url));
+    // Always redirect to 127.0.0.1 to match cookie domain
+    const redirectUrl = 'http://127.0.0.1:3000/';
+    const response = NextResponse.redirect(redirectUrl);
     response.cookies.set('spotify_tokens', cookieValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -36,6 +39,6 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (err) {
     console.error('Spotify token exchange failed:', err);
-    return NextResponse.redirect(new URL('/?error=token_exchange_failed', request.url));
+    return NextResponse.redirect('http://127.0.0.1:3000/?error=token_exchange_failed');
   }
 }

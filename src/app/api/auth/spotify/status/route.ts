@@ -3,6 +3,7 @@ import { SpotifyClient, decodeTokenCookie, refreshSpotifyToken, encodeTokenCooki
 
 export async function GET(request: NextRequest) {
   const cookie = request.cookies.get('spotify_tokens')?.value;
+  console.log('Status check — cookie present:', !!cookie, 'cookie length:', cookie?.length || 0);
 
   if (!cookie) {
     return NextResponse.json({ connected: false }, { status: 200 });

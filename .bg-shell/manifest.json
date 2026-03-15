@@ -1,14 +1,14 @@
 [
   {
-    "id": "6605d44a",
+    "id": "f68a35f4",
     "label": "next-dev",
     "command": "cd /Users/birkankader/Documents/Projects/Musicify && npm run dev",
     "cwd": "/Users/birkankader/Documents/Projects/Musicify",
-    "startedAt": 1773590521446,
+    "startedAt": 1773592289816,
     "processType": "server",
     "group": null,
     "readyPattern": null,
     "readyPort": 3000,
-    "pid": 56163
+    "pid": 56896
   }
 ]
