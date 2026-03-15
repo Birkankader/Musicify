@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { SpotifyClient, decodeTokenCookie, refreshSpotifyToken, encodeTokenCookie } from '@/lib/spotify';
+import type { SpotifyPlaylist } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +36,20 @@ export async function GET() {
     const playlists = await client.getAllPlaylists();
     const profile = await client.getProfile();
 
+    // Normalize: Spotify returns track count under 'items' or 'tracks'
+    const normalizedPlaylists = playlists.map((p) => {
+      const raw = p as unknown as Record<string, unknown>;
+      if (!p.tracks && raw.items && typeof raw.items === 'object') {
+        p.tracks = raw.items as SpotifyPlaylist['tracks'];
+      }
+      return p;
+    });
+
     // Also fetch liked songs count
     const likedPage = await client.getLikedSongs(1, 0);
 
     return NextResponse.json({
-      playlists,
+      playlists: normalizedPlaylists,
       likedSongsTotal: likedPage.total,
       userId: profile.id,
     });
