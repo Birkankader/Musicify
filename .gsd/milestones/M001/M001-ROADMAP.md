@@ -55,7 +55,7 @@ This milestone is complete only when all are true:
 - [x] **S02: Playlist Discovery & Song Matching** `risk:high` `depends:[S01]`
   > After this: User sees all their Spotify playlists, selects one, and sees match results — how many songs found on Apple Music via ISRC + fallback
 
-- [ ] **S03: Playlist Transfer & Migration Animation** `risk:medium` `depends:[S02]`
+- [x] **S03: Playlist Transfer & Migration Animation** `risk:medium` `depends:[S02]`
   > After this: Selected playlists are created on Apple Music with matched songs, album art flows across the screen during transfer, progress is tracked
 
 - [ ] **S04: Liked Songs Transfer** `risk:low` `depends:[S02]`
