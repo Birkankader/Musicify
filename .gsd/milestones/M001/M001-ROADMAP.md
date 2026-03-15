@@ -49,7 +49,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Dual Platform Authentication** `risk:high` `depends:[]`
+- [x] **S01: Dual Platform Authentication** `risk:high` `depends:[]`
   > After this: User can sign in with Spotify and authorize Apple Music — both connections shown as active on the UI
 
 - [ ] **S02: Playlist Discovery & Song Matching** `risk:high` `depends:[S01]`

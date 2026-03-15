@@ -32,3 +32,6 @@ vendor/
 coverage/
 .cache/
 tmp/
+node_modules/
+.next/
+.env.local

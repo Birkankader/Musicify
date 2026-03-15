@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-card-hover: #1a1a28;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8888a0;
+  --text-muted: #55556a;
+  --spotify-green: #1db954;
+  --spotify-green-dim: rgba(29, 185, 84, 0.15);
+  --apple-pink: #fc3c44;
+  --apple-pink-dim: rgba(252, 60, 68, 0.15);
+  --accent-gradient: linear-gradient(135deg, var(--spotify-green), #1ed760);
+  --apple-gradient: linear-gradient(135deg, var(--apple-pink), #ff6b6b);
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background grain texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orbs */
+body::after {
+  content: '';
+  position: fixed;
+  top: -30%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(29, 185, 84, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card base */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  border-color: var(--border-glow);
+  background: var(--bg-card-hover);
+}
+
+/* Platform cards */
+.platform-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.platform-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.platform-card.spotify::before {
+  background: radial-gradient(ellipse at top left, var(--spotify-green-dim), transparent 60%);
+}
+
+.platform-card.apple::before {
+  background: radial-gradient(ellipse at top left, var(--apple-pink-dim), transparent 60%);
+}
+
+.platform-card:hover::before {
+  opacity: 1;
+}
+
+.platform-card.connected {
+  border-color: var(--border-glow);
+}
+
+.platform-card.spotify.connected {
+  border-color: rgba(29, 185, 84, 0.3);
+  box-shadow: 0 0 40px rgba(29, 185, 84, 0.06);
+}
+
+.platform-card.apple.connected {
+  border-color: rgba(252, 60, 68, 0.3);
+  box-shadow: 0 0 40px rgba(252, 60, 68, 0.06);
+}
+
+/* Buttons */
+.btn-spotify {
+  background: var(--spotify-green);
+  color: #000;
+  font-family: var(--font-display);
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.btn-spotify:hover {
+  background: #1ed760;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+}
+
+.btn-apple {
+  background: var(--apple-pink);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.btn-apple:hover {
+  background: #ff4d55;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(252, 60, 68, 0.3);
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.status-badge.connected {
+  background: rgba(29, 185, 84, 0.12);
+  color: var(--spotify-green);
+}
+
+.status-badge.disconnected {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-1 { animation-delay: 0.1s; }
+.fade-in-delay-2 { animation-delay: 0.2s; }
+.fade-in-delay-3 { animation-delay: 0.3s; }
+
+/* Pulse dot for connected status */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Arrow animation between platforms */
+@keyframes slideRight {
+  0% { transform: translateX(-4px); opacity: 0.3; }
+  50% { transform: translateX(4px); opacity: 1; }
+  100% { transform: translateX(-4px); opacity: 0.3; }
+}
+
+.arrow-animate {
+  animation: slideRight 2s ease-in-out infinite;
+}
