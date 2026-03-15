@@ -162,21 +162,41 @@ export class SpotifyClient {
    * This may bypass the /tracks endpoint restriction in Development Mode.
    */
   async getPlaylistWithTracks(playlistId: string): Promise<SpotifyTrack[]> {
-    const playlist = await this.fetch<{
-      tracks: SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>;
-    }>(`/playlists/${playlistId}`, { market: 'from_token' });
+    const raw = await this.fetch<Record<string, unknown>>(`/playlists/${playlistId}`, { market: 'from_token' });
+
+    // Spotify API returns tracks under 'items' (not 'tracks') in dev mode
+    const tracksData = (raw.tracks ?? raw.items) as SpotifyPaginatedResponse<SpotifyPlaylistTrackItem> | unknown[] | undefined;
+
+    // Could be a paginated response or a raw array
+    const items: SpotifyPlaylistTrackItem[] = [];
+    let nextUrl: string | null = null;
+
+    if (Array.isArray(tracksData)) {
+      // Raw array of items
+      for (const item of tracksData as SpotifyPlaylistTrackItem[]) {
+        items.push(item);
+      }
+    } else if (tracksData && typeof tracksData === 'object' && 'items' in tracksData) {
+      // Paginated response
+      const paginated = tracksData as SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>;
+      items.push(...paginated.items);
+      nextUrl = paginated.next;
+    } else {
+      console.warn('[SpotifyClient] No track data in playlist response. Keys:', Object.keys(raw));
+      return [];
+    }
 
     const tracks: SpotifyTrack[] = [];
 
-    // Process first page (embedded in playlist object)
-    for (const item of playlist.tracks.items) {
-      if (!item.is_local && item.track) {
-        tracks.push(item.track);
+    for (const item of items) {
+      // Item could be a wrapped {track} or a direct track object
+      const track = item.track ?? (item as unknown as SpotifyTrack);
+      if (track && track.id && !(item.is_local)) {
+        tracks.push(track);
       }
     }
 
     // Paginate remaining if any
-    let nextUrl = playlist.tracks.next;
     while (nextUrl) {
       // next URL is absolute — extract path + query
       const url = new URL(nextUrl);
