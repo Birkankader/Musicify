@@ -152,7 +152,7 @@ export function PlaylistGrid({ onSelectPlaylist, onSelectLikedSongs, selectedPla
             </div>
             <div className="font-medium text-sm truncate">{playlist.name}</div>
             <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
-              {playlist.tracks.total} songs · {playlist.owner.display_name}
+              {playlist.tracks?.total ?? 0} songs · {playlist.owner?.display_name ?? ''}
             </div>
           </button>
         ))}
