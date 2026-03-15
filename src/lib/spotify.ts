@@ -172,12 +172,10 @@ export class SpotifyClient {
     let nextUrl: string | null = null;
 
     if (Array.isArray(tracksData)) {
-      // Raw array of items
       for (const item of tracksData as SpotifyPlaylistTrackItem[]) {
         items.push(item);
       }
     } else if (tracksData && typeof tracksData === 'object' && 'items' in tracksData) {
-      // Paginated response
       const paginated = tracksData as SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>;
       items.push(...paginated.items);
       nextUrl = paginated.next;
@@ -188,11 +186,12 @@ export class SpotifyClient {
 
     const tracks: SpotifyTrack[] = [];
 
-    for (const item of items) {
-      // Item could be a wrapped {track} or a direct track object
-      const track = item.track ?? (item as unknown as SpotifyTrack);
-      if (track && track.id && !(item.is_local)) {
-        tracks.push(track);
+    for (const entry of items) {
+      // Spotify API returns track data under 'track' or 'item' key depending on endpoint version
+      const track = (entry as unknown as Record<string, unknown>).track ?? (entry as unknown as Record<string, unknown>).item;
+      const trackObj = track as SpotifyTrack | null;
+      if (trackObj && trackObj.id && !entry.is_local) {
+        tracks.push(trackObj);
       }
     }
 
@@ -202,9 +201,11 @@ export class SpotifyClient {
       const url = new URL(nextUrl);
       const pathAndQuery = url.pathname.replace('/v1', '') + url.search;
       const page = await this.fetch<SpotifyPaginatedResponse<SpotifyPlaylistTrackItem>>(pathAndQuery);
-      for (const item of page.items) {
-        if (!item.is_local && item.track) {
-          tracks.push(item.track);
+      for (const entry of page.items) {
+        const track = (entry as unknown as Record<string, unknown>).track ?? (entry as unknown as Record<string, unknown>).item;
+        const trackObj = track as SpotifyTrack | null;
+        if (trackObj && trackObj.id && !entry.is_local) {
+          tracks.push(trackObj);
         }
       }
       nextUrl = page.next;
