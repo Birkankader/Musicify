@@ -87,7 +87,9 @@ export async function transferPlaylist(
 }
 
 /**
- * Add songs directly to Apple Music library (for liked songs transfer).
+ * Add liked songs to Apple Music favorites using the Ratings API.
+ * PUT /v1/me/ratings/songs/{catalogId} with value:1 both adds the song
+ * to the user's library and marks it as "loved" (heart icon).
  */
 export async function addToLibrary(
   matchResults: MatchResult[],
@@ -106,40 +108,40 @@ export async function addToLibrary(
     return buildResult('Liked Songs', '__liked__', undefined, items);
   }
 
-  const trackIds = matched.map((r) => r.appleMusicId!);
+  onProgress?.({ phase: 'adding-tracks', completed: 0, total: matched.length });
 
-  for (let i = 0; i < trackIds.length; i += BATCH_SIZE) {
-    const batch = trackIds.slice(i, i + BATCH_SIZE);
+  // Process in parallel with concurrency limit to avoid rate limiting
+  const CONCURRENCY = 10;
+  let completed = 0;
 
-    try {
-      await addSongsToLibrary(batch, musicUserToken, developerToken);
+  for (let i = 0; i < matched.length; i += CONCURRENCY) {
+    const chunk = matched.slice(i, i + CONCURRENCY);
 
-      for (let j = i; j < i + batch.length; j++) {
-        const matchIdx = matchResults.indexOf(matched[j]);
-        if (matchIdx >= 0) {
-          items[matchIdx].status = 'transferred';
-        }
-      }
-    } catch (err) {
-      console.error(`[transfer] Library add failed at ${i}:`, err);
-      for (let j = i; j < i + batch.length; j++) {
-        const matchIdx = matchResults.indexOf(matched[j]);
+    await Promise.all(chunk.map(async (result) => {
+      const matchIdx = matchResults.indexOf(result);
+
+      try {
+        await loveSong(result.appleMusicId!, musicUserToken, developerToken);
+        if (matchIdx >= 0) items[matchIdx].status = 'transferred';
+      } catch (err) {
+        console.error(`[transfer] Failed to love "${result.spotifyTrack.name}":`, err);
         if (matchIdx >= 0) {
           items[matchIdx].status = 'failed';
           items[matchIdx].error = err instanceof Error ? err.message : 'Unknown error';
         }
       }
-    }
+    }));
 
-    const completed = Math.min(i + batch.length, trackIds.length);
-    onProgress?.({ phase: 'adding-tracks', completed, total: trackIds.length });
+    completed = Math.min(i + chunk.length, matched.length);
+    const lastTrack = chunk[chunk.length - 1]?.spotifyTrack.name;
+    onProgress?.({ phase: 'adding-tracks', completed, total: matched.length, currentTrack: lastTrack });
 
-    if (i + BATCH_SIZE < trackIds.length) {
-      await delay(BATCH_DELAY_MS);
+    if (i + CONCURRENCY < matched.length) {
+      await delay(100);
     }
   }
 
-  onProgress?.({ phase: 'done', completed: trackIds.length, total: trackIds.length });
+  onProgress?.({ phase: 'done', completed: matched.length, total: matched.length });
 
   return buildResult('Liked Songs', '__liked__', undefined, items);
 }
@@ -212,17 +214,18 @@ async function addTracksToPlaylist(
   console.log(`[transfer] Added ${trackIds.length} tracks to playlist ${playlistId}`);
 }
 
-async function addSongsToLibrary(
-  trackIds: string[],
+async function loveSong(
+  catalogId: string,
   musicUserToken: string,
   developerToken: string
 ): Promise<void> {
-  const ids = trackIds.join(',');
-  await amFetch(`/v1/me/library?ids[songs]=${encodeURIComponent(ids)}`, musicUserToken, developerToken, {
-    method: 'POST',
+  await amFetch(`/v1/me/ratings/songs/${catalogId}`, musicUserToken, developerToken, {
+    method: 'PUT',
+    body: {
+      type: 'rating',
+      attributes: { value: 1 },
+    },
   });
-
-  console.log(`[transfer] Added ${trackIds.length} songs to library`);
 }
 
 // --- Helpers ---
